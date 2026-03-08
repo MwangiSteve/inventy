@@ -1,0 +1,41 @@
+name: Security Audit
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Run every Monday at 08:00 UTC
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+
+jobs:
+  npm-audit:
+    name: NPM Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit (fail on critical/high)
+        run: npm audit --audit-level=high
+
+      - name: Generate security report
+        if: always()
+        run: npm audit --json > security-report.json || true
+
+      - name: Upload security report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-report
+          path: security-report.json
+          retention-days: 30

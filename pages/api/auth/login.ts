@@ -3,10 +3,13 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../../../utils/auth";
 import Cookies from "cookies";
+import { authLimiter, runMiddleware } from "@/middleware/rateLimiter";
 
 const prisma = new PrismaClient();
 
 export default async function login(req: NextApiRequest, res: NextApiResponse) {
+  await runMiddleware(req, res, authLimiter);
+  if (res.headersSent) return;
   const allowedOrigins = [
     "https://stockly-inventory.vercel.app",
     "https://stockly-inventory-managment-nextjs-ovlrz6kdv.vercel.app",
