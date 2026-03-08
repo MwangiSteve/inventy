@@ -10,6 +10,8 @@ jobs:
   lint-and-type-check:
     name: Lint & Type Check
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,6 +34,8 @@ jobs:
   test:
     name: Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-test-jwt-secret' }}
       DATABASE_URL: ${{ secrets.DATABASE_URL || 'mongodb://localhost:27017/test' }}
@@ -61,6 +65,8 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: [lint-and-type-check]
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL || 'mongodb://localhost:27017/test' }}

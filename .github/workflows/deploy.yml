@@ -18,6 +18,8 @@ jobs:
   deploy:
     name: Deploy to Vercel
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     environment: ${{ github.event.inputs.environment || 'production' }}
     steps:
       - name: Checkout code
