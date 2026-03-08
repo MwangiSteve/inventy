@@ -1,8 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 import bcrypt from "bcryptjs";
 import { MongoClient } from "mongodb";
+import { authLimiter, runMiddleware } from "@/middleware/rateLimiter";
 
 const prisma = new PrismaClient();
 
@@ -16,6 +17,9 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  await runMiddleware(req, res, authLimiter);
+  if (res.headersSent) return;
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
@@ -69,6 +73,9 @@ export default async function handler(
 
     res.status(201).json({ id: createdUser.id, name: createdUser.name, email: createdUser.email });
   } catch (error) {
+    if (error instanceof ZodError) {
+      return res.status(400).json({ error: "Validation failed", details: error.flatten() });
+    }
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
     } else {

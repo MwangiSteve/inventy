@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
 import { getSessionServer } from "@/utils/auth";
+import { dataLimiter, runMiddleware } from "@/middleware/rateLimiter";
 
 const prisma = new PrismaClient();
 
@@ -8,6 +9,9 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  await runMiddleware(req, res, dataLimiter);
+  if (res.headersSent) return;
+
   const session = await getSessionServer(req, res);
   if (!session) {
     return res.status(401).json({ error: "Unauthorized" });
